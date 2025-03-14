@@ -1,5 +1,16 @@
+import os
+import tempfile
+
 import streamlit as st
 import pandas as pd
+
+from rag.rag import answer_question
+from rag.rag import store_pdf_file
+
+
+if 'stored_files' not in st.session_state:
+    st.session_state['stored_files'] = []
+
 
 def main():
     # Titre et explications
@@ -23,7 +34,15 @@ def main():
                 "Nom du fichier": f.name,
                 "Taille (KB)": f"{size_in_kb:.2f}"
             })
-        
+
+            if f.name.endswith('.pdf') and f.name not in st.session_state['stored_files']:
+                temp_dir = tempfile.mkdtemp()
+                path = os.path.join(temp_dir, "temp.pdf")  # Give it a name, like temp.pdf
+                with open(path, "wb") as outfile:
+                    outfile.write(f.read()) # Use f.read() to get the bytes
+                store_pdf_file(path)
+                st.session_state['stored_files'].append(f.name)
+
         df = pd.DataFrame(file_info)
         st.table(df)  # on affiche le tableau
 
@@ -39,10 +58,13 @@ def main():
         # ========
         
         # On met un placeholder de réponse pour la démonstration
-        reponse_modele = f"Voici une réponse fictive à la question : {question}"
+        #reponse_modele = f"Voici une réponse fictive à la question : {question}"
         
+        model_response = answer_question(question)
+
         # Affichage de la réponse
-        st.text_area("Zone de texte, réponse du modèle", value=reponse_modele, height=200)
+        st.text_area("Zone de texte, réponse du modèle",
+                     value=model_response, height=200)
     else:
         # Zone vide ou explicative quand on n'a pas encore analysé
         st.text_area("Zone de texte, réponse du modèle", value="", height=200)
