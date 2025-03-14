@@ -5,6 +5,7 @@ import streamlit as st
 import pandas as pd
 
 from rag.rag import answer_question
+from rag.rag import delete_file_from_store
 from rag.rag import store_pdf_file
 
 
@@ -25,8 +26,8 @@ def main():
     )
     
     # S'il y a des fichiers, on affiche leurs noms et tailles
+    file_info = []
     if uploaded_files:
-        file_info = []
         for f in uploaded_files:
             # La taille, en octets, se récupère via len(f.getvalue())
             size_in_kb = len(f.getvalue()) / 1024
@@ -40,11 +41,22 @@ def main():
                 path = os.path.join(temp_dir, "temp.pdf")  # Give it a name, like temp.pdf
                 with open(path, "wb") as outfile:
                     outfile.write(f.read()) # Use f.read() to get the bytes
-                store_pdf_file(path)
+                store_pdf_file(path, f.name)
                 st.session_state['stored_files'].append(f.name)
+        
+
 
         df = pd.DataFrame(file_info)
         st.table(df)  # on affiche le tableau
+
+    # Gestion de la suppression de documents
+    files_to_be_deleted = set(st.session_state['stored_files']) - {f['Nom du fichier'] for f in file_info}
+    # print(set(st.session_state['stored_files']))
+    # print({f['Nom du fichier'] for f in file_info})
+    # print(files_to_be_deleted)
+    for name in files_to_be_deleted:
+        st.session_state['stored_files'].remove(name)
+        delete_file_from_store(name)
 
     # Champ de question
     question = st.text_input("Votre question ici")

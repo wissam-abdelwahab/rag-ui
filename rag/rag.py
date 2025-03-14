@@ -1,5 +1,7 @@
 import yaml
 
+from datetime import datetime
+
 from langchain_community.document_loaders import TextLoader
 from langchain_community.document_loaders import PyMuPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
@@ -42,7 +44,7 @@ llm = AzureChatOpenAI(
 )
 
 
-def store_pdf_file(file_path: str):
+def store_pdf_file(file_path: str, doc_name: str):
     """Store a pdf file in the vector store.
 
     Args:
@@ -54,15 +56,30 @@ def store_pdf_file(file_path: str):
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=CHUNK_SIZE,
                                                    chunk_overlap=CHUNK_OVERLAP)
     all_splits = text_splitter.split_documents(docs)
+    for split in all_splits:
+        split.metadata = {
+            'document_name': doc_name,
+            'insert_date': datetime.now()
+            }
     _ = vector_store.add_documents(documents=all_splits)
     return
+
+
+def delete_file_from_store(name: str) -> int:
+    ids_to_remove = []
+    for (id, doc) in vector_store.store.items():
+        if name == doc['metadata']['document_name']:
+            ids_to_remove.append(id)
+    vector_store.delete(ids_to_remove)
+    #print('File deleted:', name)
+    return len(ids_to_remove)
 
 
 def inspect_vector_store(top_n: int=10):
     for index, (id, doc) in enumerate(vector_store.store.items()):
         if index < top_n:
             # docs have keys 'id', 'vector', 'text', 'metadata'
-            print(f"{id}: {doc['text']}")
+            print(f"{id} {doc['metadata']['document_name']}: {doc['text']}")
         else:
             break
     return
