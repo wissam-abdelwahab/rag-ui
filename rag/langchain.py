@@ -6,6 +6,7 @@ from langchain_community.document_loaders import TextLoader
 from langchain_community.document_loaders import PyMuPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_core.vectorstores import InMemoryVectorStore
+from langchain_core.documents import Document
 
 from langchain_openai import AzureOpenAIEmbeddings
 from langchain_openai import AzureChatOpenAI
@@ -44,7 +45,36 @@ llm = AzureChatOpenAI(
 )
 
 
-def store_pdf_file(file_path: str, doc_name: str):
+def get_meta_doc(extract: str) -> str:
+    """Generate a synthetic metadata description of the content.
+    """
+    messages = [
+    (
+        "system",
+        "You are a librarian extracting metadata from documents.",
+    ),
+    (
+        "user",
+        """Extract from the content the following metadata.
+        Answer 'unknown' if you cannot find or generate the information.
+        Metadata list:
+        - title
+        - author
+        - source
+        - type of content (e.g. scientific paper, litterature, news, etc.)
+        - language
+        - themes as a list of keywords
+
+        <content>
+        {}
+        </content>
+        """.format(extract),
+    ),]
+    response = llm.invoke(messages)
+    return response.content
+
+
+def store_pdf_file(file_path: str, doc_name: str, use_meta_doc: bool=True):
     """Store a pdf file in the vector store.
 
     Args:
@@ -61,6 +91,14 @@ def store_pdf_file(file_path: str, doc_name: str):
             'document_name': doc_name,
             'insert_date': datetime.now()
             }
+    if use_meta_doc:
+        extract = '\n\n'.join([split.page_content for split in all_splits[:min(10, len(all_splits))]])
+        meta_doc = Document(page_content=get_meta_doc(extract),
+                            metadata={
+                                'document_name': doc_name,
+                                'insert_date': datetime.now()
+                                })
+        all_splits.append(meta_doc)
     _ = vector_store.add_documents(documents=all_splits)
     return
 
@@ -75,14 +113,40 @@ def delete_file_from_store(name: str) -> int:
     return len(ids_to_remove)
 
 
-def inspect_vector_store(top_n: int=10):
+def inspect_vector_store(top_n: int=10) -> list:
+    docs = []
     for index, (id, doc) in enumerate(vector_store.store.items()):
         if index < top_n:
+            docs.append({
+                'id': id,
+                'document_name': doc['metadata']['document_name'],
+                'insert_date': doc['metadata']['insert_date'],
+                'text': doc['text']
+                })
             # docs have keys 'id', 'vector', 'text', 'metadata'
-            print(f"{id} {doc['metadata']['document_name']}: {doc['text']}")
+            # print(f"{id} {doc['metadata']['document_name']}: {doc['text']}")
         else:
             break
-    return
+    return docs
+
+
+def get_vector_store_info():
+    nb_docs = 0
+    max_date, min_date = None, None
+    documents = set()
+    for (id, doc) in vector_store.store.items():
+        nb_docs += 1
+        if max_date is None or max_date < doc['metadata']['insert_date']:
+            max_date = doc['metadata']['insert_date']
+        if min_date is None or min_date > doc['metadata']['insert_date']:
+            min_date = doc['metadata']['insert_date']
+        documents.add(doc['metadata']['document_name'])
+    return {
+        'nb_chunks': nb_docs,
+        'min_insert_date': min_date,
+        'max_insert_date': max_date,
+        'nb_documents': len(documents)
+    }
 
 
 def retrieve(question: str):
@@ -139,3 +203,4 @@ def answer_question(question: str) -> str:
     messages = build_qa_messages(question, docs_content)
     response = llm.invoke(messages)
     return response.content
+
