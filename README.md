@@ -17,14 +17,10 @@ Installation :
    git clone https://github.com/mon-utilisateur/mon-depot.git
    cd mon-depot
 
-2. Créer un environnement virtuel (optionnel mais recommandé) :
-   python -m venv env
-   source env/bin/activate     (ou env\Scripts\activate sous Windows)
-
-3. Installer les dépendances :
+2. Installer les dépendances :
    pip install -r requirements.txt
 
-4. Créer un fichier secrets/config.yaml avec les identifiants Azure OpenAI :
+3. Créer un fichier secrets/config.yaml avec les identifiants Azure OpenAI :
 
    chat:
      azure_deployment: ...
