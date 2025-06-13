@@ -1,6 +1,6 @@
 # rag/langchain.py
-import yaml
 from datetime import datetime
+import streamlit as st
 from langchain_community.document_loaders import TextLoader, PyMuPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_core.vectorstores import InMemoryVectorStore
@@ -10,16 +10,22 @@ from langchain_openai import AzureOpenAIEmbeddings, AzureChatOpenAI
 CHUNK_SIZE = 1_000
 CHUNK_OVERLAP = 200
 
-def read_config(file_path):
-    with open(file_path, 'r') as file:
-        try:
-            config = yaml.safe_load(file)
-            return config
-        except yaml.YAMLError as e:
-            print(f"Error reading YAML file: {e}")
-            return None
 
-config = read_config("secrets/config.yaml")
+config = {
+    "chat": {
+        "azure_deployment": st.secrets["chat"]["azure_deployment"],
+        "azure_api_key": st.secrets["chat"]["azure_api_key"],
+        "azure_endpoint": st.secrets["chat"]["azure_endpoint"],
+        "azure_api_version": st.secrets["chat"]["azure_api_version"]
+    },
+    "embedding": {
+        "azure_deployment": st.secrets["embedding"]["azure_deployment"],
+        "azure_api_key": st.secrets["embedding"]["azure_api_key"],
+        "azure_endpoint": st.secrets["embedding"]["azure_endpoint"],
+        "azure_api_version": st.secrets["embedding"]["azure_api_version"]
+    }
+}
+
 
 embedder = AzureOpenAIEmbeddings(
     azure_endpoint=config["embedding"]["azure_endpoint"],
