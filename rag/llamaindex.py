@@ -20,7 +20,7 @@ config = {
 }
 
 llm = AzureOpenAI(
-    model=config["chat"]["azure_deployment"],
+    model="gpt-35-chat",
     deployment_name=config["chat"]["azure_deployment"],
     api_key=config["chat"]["azure_api_key"],
     azure_endpoint=config["chat"]["azure_endpoint"],
@@ -28,7 +28,7 @@ llm = AzureOpenAI(
 )
 
 embedder = AzureOpenAIEmbedding(
-    model="text-embedding-ada-002",,
+    model="text-embedding-ada-002",
     deployment_name=config["embedding"]["azure_deployment"],
     api_key=config["embedding"]["azure_api_key"],
     azure_endpoint=config["embedding"]["azure_endpoint"],
