@@ -1,9 +1,7 @@
-# rag/llamaindex.py
-
 from datetime import datetime
 import streamlit as st
 
-from llama_index.core import VectorStoreIndex, Settings
+from llama_index.core import Settings
 from llama_index.core.node_parser import SentenceSplitter
 from llama_index.core.schema import TextNode
 from llama_index.core.vector_stores import SimpleVectorStore, VectorStoreQuery
@@ -30,7 +28,7 @@ llm = AzureOpenAI(
 )
 
 embedder = AzureOpenAIEmbedding(
-    model="text-embedding-ada-002",  # modèle attendu par Azure
+    model="text-embedding-ada-002",
     deployment_name=config["embedding"]["azure_deployment"],
     api_key=config["embedding"]["azure_api_key"],
     azure_endpoint=config["embedding"]["azure_endpoint"],
@@ -59,19 +57,20 @@ def store_pdf_file(file_path: str, doc_name: str):
     nodes = []
     for idx, chunk in enumerate(text_chunks):
         node = TextNode(text=chunk)
-        src_doc = documents[doc_idxs[idx]]
-        node.metadata = src_doc.metadata
+        node.metadata = {
+            "document_name": doc_name,
+            "insert_date": datetime.now().isoformat()
+        }
         node.embedding = embedder.get_text_embedding(
             node.get_content(metadata_mode="all")
         )
         nodes.append(node)
 
+    print(f"{len(nodes)} chunks ajoutés pour le document '{doc_name}'")
     vector_store.add(nodes)
-
 
 def delete_file_from_store(name: str) -> int:
     raise NotImplementedError("Delete is not implemented for LlamaIndex.")
-
 
 def retrieve(question: str, k: int = 5):
     query_embedding = embedder.get_query_embedding(question)
@@ -82,7 +81,6 @@ def retrieve(question: str, k: int = 5):
     )
     result = vector_store.query(vector_store_query)
     return result.nodes
-
 
 def build_qa_messages(question: str, context: str, language: str) -> list:
     instructions = {
@@ -105,9 +103,10 @@ Use three sentences maximum and keep the answer concise.
         ("user", question),
     ]
 
-
 def answer_question(question: str, language: str = "français", k: int = 5) -> str:
     docs = retrieve(question, k)
+    if not docs:
+        return "Aucun document pertinent trouvé pour cette question."
     docs_content = "\n\n".join(doc.get_content() for doc in docs)
     messages = build_qa_messages(question, docs_content, language)
     response = llm.invoke(messages)
