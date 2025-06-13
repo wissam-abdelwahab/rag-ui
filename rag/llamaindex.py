@@ -26,7 +26,7 @@ llm = AzureOpenAI(
     deployment_name=config["chat"]["azure_deployment"],
     api_key=config["chat"]["azure_api_key"],
     azure_endpoint=config["chat"]["azure_endpoint"],
-    api_version=config["chat"]["azure_api_version"],
+    api_version=config["chat"]["api_version"],
 )
 
 embedder = AzureOpenAIEmbedding(
@@ -34,7 +34,7 @@ embedder = AzureOpenAIEmbedding(
     deployment_name=config["embedding"]["azure_deployment"],
     api_key=config["embedding"]["azure_api_key"],
     azure_endpoint=config["embedding"]["azure_endpoint"],
-    api_version=config["embedding"]["azure_api_version"],
+    api_version=config["embedding"]["api_version"],
 )
 
 Settings.llm = llm
