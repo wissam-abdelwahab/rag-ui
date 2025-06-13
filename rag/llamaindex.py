@@ -7,11 +7,10 @@ from llama_index.core.vector_stores import SimpleVectorStore, VectorStoreQuery
 from llama_index.embeddings.azure_openai import AzureOpenAIEmbedding
 from llama_index.llms.azure_openai import AzureOpenAI
 from llama_index.readers.file import PyMuPDFReader
+import streamlit as st
 
 CHUNK_SIZE = 1_000
 CHUNK_OVERLAP = 200
-
-import streamlit as st
 
 config = {
     "chat": {
@@ -28,7 +27,6 @@ config = {
     }
 }
 
-
 llm = AzureOpenAI(
     model=config["chat"]["azure_deployment"],
     deployment_name=config["chat"]["azure_deployment"],
@@ -38,7 +36,7 @@ llm = AzureOpenAI(
 )
 
 embedder = AzureOpenAIEmbedding(
-    model=config["embedding"]["azure_deployment"],
+    model="text-embedding-ada-002",  # ✅ nom du vrai modèle attendu par LlamaIndex
     deployment_name=config["embedding"]["azure_deployment"],
     api_key=config["embedding"]["azure_api_key"],
     azure_endpoint=config["embedding"]["azure_endpoint"],
@@ -84,7 +82,6 @@ def retrieve(question: str, k: int = 5):
     )
     query_result = vector_store.query(vector_store_query)
     return query_result.nodes
-
 
 def build_qa_messages(question: str, context: str, language: str) -> list[str]:
     instructions = {
