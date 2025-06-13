@@ -89,46 +89,7 @@ def retrieve(question: str, k: int = 5):
     print(f"{len(result.nodes)} documents trouvés pour la question : '{question}'")
     return result.nodes
 
-def inspect_vector_store(top_n: int = 5):
-    for i, (doc_id, doc) in enumerate(vector_store.store.items()):
-        print(f"Document {i + 1} — {doc['metadata']['document_name']}")
-        print(doc['text'][:300], "...")
-
 def build_qa_messages(question: str, context: str, language: str) -> list:
     instructions = {
         "français": "Réponds en français.",
-        "anglais": "Answer in English.",
-        "espagnol": "Responde en español.",
-        "allemand": "Antwort auf Deutsch."
-    }
-    lang_instruction = instructions.get(language, "Answer in English.")
-    return [
-        ("system", "You are an assistant for question-answering tasks."),
-        (
-            "system",
-            f"""Use the following pieces of retrieved context to answer the question.
-If you don't know the answer, just say that you don't know.
-Use three sentences maximum and keep the answer concise.
-{lang_instruction}
-{context}"""
-        ),
-        ("user", question),
-    ]
-
-def answer_question(question: str, language: str = "français", k: int = 5) -> str:
-    docs = retrieve(question, k)
-    if not docs:
-        # fallback : utiliser tous les documents indexés si aucun résultat direct
-        print("Pas de correspondance exacte, tentative de fallback...")
-        all_docs = list(vector_store.store.values())
-        if not all_docs:
-            return "Aucun document dans la base de connaissances."
-        content = "\n\n".join(doc['text'] for doc in all_docs[:5])
-        messages = build_qa_messages(question, content, language)
-        response = llm.invoke(messages)
-        return response.content
-
-    docs_content = "\n\n".join(doc.get_content() for doc in docs)
-    messages = build_qa_messages(question, docs_content, language)
-    response = llm.invoke(messages)
-    return response.content
+        "anglais": "
