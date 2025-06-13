@@ -89,6 +89,11 @@ def retrieve(question: str, k: int = 5):
     print(f"{len(result.nodes)} documents trouvés pour la question : '{question}'")
     return result.nodes
 
+def inspect_vector_store(top_n: int = 5):
+    for i, (doc_id, doc) in enumerate(vector_store.store.items()):
+        print(f"Document {i + 1} — {doc['metadata']['document_name']}")
+        print(doc['text'][:300], "...")
+
 def build_qa_messages(question: str, context: str, language: str) -> list:
     instructions = {
         "français": "Réponds en français.",
@@ -113,7 +118,16 @@ Use three sentences maximum and keep the answer concise.
 def answer_question(question: str, language: str = "français", k: int = 5) -> str:
     docs = retrieve(question, k)
     if not docs:
-        return "Aucun document pertinent trouvé pour cette question."
+        # fallback : utiliser tous les documents indexés si aucun résultat direct
+        print("Pas de correspondance exacte, tentative de fallback...")
+        all_docs = list(vector_store.store.values())
+        if not all_docs:
+            return "Aucun document dans la base de connaissances."
+        content = "\n\n".join(doc['text'] for doc in all_docs[:5])
+        messages = build_qa_messages(question, content, language)
+        response = llm.invoke(messages)
+        return response.content
+
     docs_content = "\n\n".join(doc.get_content() for doc in docs)
     messages = build_qa_messages(question, docs_content, language)
     response = llm.invoke(messages)
