@@ -92,4 +92,40 @@ def retrieve(question: str, k: int = 5):
 def build_qa_messages(question: str, context: str, language: str) -> list:
     instructions = {
         "français": "Réponds en français.",
-        "anglais": "
+        "anglais": "Answer in English.",
+        "espagnol": "Responde en español.",
+        "allemand": "Antwort auf Deutsch."
+    }
+    lang_instruction = instructions.get(language, "Answer in English.")
+    return [
+        ("system", "You are an assistant for question-answering tasks."),
+        (
+            "system",
+            f"""Use the following pieces of retrieved context to answer the question.
+If you don't know the answer, just say that you don't know.
+Use three sentences maximum and keep the answer concise.
+{lang_instruction}
+{context}"""
+        ),
+        ("user", question),
+    ]
+
+def answer_question(question: str, language: str = "français", k: int = 5) -> str:
+    docs = retrieve(question, k)
+    if not docs:
+        print("Pas de correspondance exacte, tentative de fallback...")
+
+        # tentative de récupération neutre
+        fallback_docs = retrieve("contenu général", k=5)
+        if not fallback_docs:
+            return "Aucun document dans la base de connaissances."
+
+        content = "\n\n".join(doc.get_content() for doc in fallback_docs)
+        messages = build_qa_messages(question, content, language)
+        response = llm.invoke(messages)
+        return response.content
+
+    docs_content = "\n\n".join(doc.get_content() for doc in docs)
+    messages = build_qa_messages(question, docs_content, language)
+    response = llm.invoke(messages)
+    return response.content
