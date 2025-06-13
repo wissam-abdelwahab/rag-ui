@@ -81,6 +81,11 @@ def retrieve(question: str, k: int = 5):
         mode="default"
     )
     result = vector_store.query(vector_store_query)
+
+    if result is None or result.nodes is None:
+        print(f"Aucun résultat trouvé pour la question : '{question}'")
+        return []
+
     print(f"{len(result.nodes)} documents trouvés pour la question : '{question}'")
     return result.nodes
 
