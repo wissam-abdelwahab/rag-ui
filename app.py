@@ -4,6 +4,11 @@ import streamlit as st
 import pandas as pd
 import sqlite3
 
+st.set_page_config(
+    page_title="Analyse de documents",
+    page_icon="👋",
+)
+
 # ==========================
 # Choix du framework (Q4)
 # ==========================
@@ -18,14 +23,6 @@ if framework == "langchain":
     import rag.langchain as rag_backend
 else:
     import rag.llamaindex as rag_backend
-
-# ==========================
-# Config de la page
-# ==========================
-st.set_page_config(
-    page_title="Analyse de documents",
-    page_icon="👋",
-)
 
 if 'stored_files' not in st.session_state:
     st.session_state['stored_files'] = []
