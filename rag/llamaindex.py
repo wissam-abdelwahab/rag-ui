@@ -61,9 +61,9 @@ def store_pdf_file(file_path: str, doc_name: str):
             "document_name": doc_name,
             "insert_date": datetime.now().isoformat()
         }
-        node.embedding = embedder.get_text_embedding(
-            node.get_content(metadata_mode="all")
-        )
+        embedding = embedder.get_text_embedding(node.get_content(metadata_mode="all"))
+        print(f"Chunk {idx + 1} embedding (first 5 dims): {embedding[:5]}")
+        node.embedding = embedding
         nodes.append(node)
 
     print(f"{len(nodes)} chunks ajoutés pour le document '{doc_name}'")
@@ -74,12 +74,14 @@ def delete_file_from_store(name: str) -> int:
 
 def retrieve(question: str, k: int = 5):
     query_embedding = embedder.get_query_embedding(question)
+    print(f"Embedding pour la question (first 5 dims): {query_embedding[:5]}")
     vector_store_query = VectorStoreQuery(
         query_embedding=query_embedding,
         similarity_top_k=k,
         mode="default"
     )
     result = vector_store.query(vector_store_query)
+    print(f"{len(result.nodes)} documents trouvés pour la question : '{question}'")
     return result.nodes
 
 def build_qa_messages(question: str, context: str, language: str) -> list:
@@ -111,6 +113,3 @@ def answer_question(question: str, language: str = "français", k: int = 5) -> s
     messages = build_qa_messages(question, docs_content, language)
     response = llm.invoke(messages)
     return response.content
-
-
-
