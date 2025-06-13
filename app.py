@@ -121,8 +121,8 @@ def main():
 
     # Champ de question
     question = st.text_input("Votre question ici")
+    
 
-    # Bouton "Analyser"
     if st.button("Analyser"):
         model_response = rag_backend.answer_question(question, language=language, k=k)
         st.text_area("Zone de texte, réponse du modèle", value=model_response, height=200)
@@ -130,13 +130,14 @@ def main():
         # ==========================
         # Feedback utilisateur (Q6b)
         # ==========================
-        feedback = st.feedback("Cette réponse vous a-t-elle été utile ?")
+        feedback = st.radio("Cette réponse vous a-t-elle été utile ?", ["👍 Oui", "👎 Non"], index=None)
         if feedback:
-            save_feedback(question, model_response, feedback)
+            print(f"Feedback utilisateur : {feedback}")  # ou save_feedback(...)
             st.success("Merci pour votre retour !")
 
     else:
         st.text_area("Zone de texte, réponse du modèle", value="", height=200)
+
 
 if __name__ == "__main__":
     main()
