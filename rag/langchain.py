@@ -112,9 +112,3 @@ def answer_question(question: str, language: str = "français", k: int = 5) -> s
     messages = build_qa_messages(question, docs_content, language)
     response = llm.invoke(messages)
     return response.content
-
-def inspect_vector_store(top_n: int = 5):
-    for i, (doc_id, doc) in enumerate(vector_store.store.items()):
-        if i >= top_n:
-            break
-        print(f"[{i}] {doc['metadata'].get('document_name')} : {doc['text'][:100]}")
