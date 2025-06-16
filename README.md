@@ -11,33 +11,6 @@ Fonctionnalités :
 - Génération de réponse à partir des documents
 - Feedback utilisateur (stocké dans une base SQLite)
 
-Installation :
-
-1. Cloner le dépôt :
-   git clone https://github.com/mon-utilisateur/mon-depot.git
-   cd mon-depot
-
-2. Installer les dépendances :
-   pip install -r requirements.txt
-
-3. Créer un fichier secrets/config.yaml avec les identifiants Azure OpenAI :
-
-   chat:
-     azure_deployment: ...
-     azure_api_key: ...
-     azure_endpoint: ...
-     azure_api_version: ...
-
-   embedding:
-     azure_deployment: ...
-     azure_api_key: ...
-     azure_endpoint: ...
-     azure_api_version: ...
-
-Lancement de l'application :
-
-   streamlit run app.py
-
 Déploiement :
 
-L'application peut être déployée sur Streamlit Cloud. Il suffit d'y connecter ce dépôt et de spécifier app.py comme script principal.
+L'application est déployée sur Streamlit Cloud. Il suffit d'y connecter de s'y connecter à https://fadvxxjxfttyk6a5svc6jd.streamlit.app/
